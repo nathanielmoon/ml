@@ -1,0 +1,9 @@
+data/
+venv/
+
+*.ignore.*
+
+.DS_Store
+*.pyc
+*.png
+*.csv
