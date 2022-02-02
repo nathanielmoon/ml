@@ -1,4 +1,4 @@
-from sklearn.neural_network import MLPClassifier
+from sklearn.neighbors import KNeighborsClassifier
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
@@ -8,30 +8,26 @@ from src.analyze_model import analyze_classification
 from src.util import upsertDirectory
 from src.paths import OUTPUT_DIR
 
-OUTPUT = OUTPUT_DIR / 'nn/penguins/'
+OUTPUT = OUTPUT_DIR / 'svm/penguins/'
 
 
 def run_iteration(data, params):
     X_train, X_test, y_train, y_test = data
-    nn = MLPClassifier(
-        solver='lbfgs',
-        alpha=1e-5,
-        hidden_layer_sizes=(5, 2),
-        random_state=1
-    )
+    knn = KNeighborsClassifier(n_neighbors=3)
 
-    nn.fit(X_train, y_train)
+    knn.fit(X_train, y_train)
 
     def predict(X):
-        return nn.predict(X)
+        return knn.predict(X)
 
     report = analyze_classification(predict, X_train, X_test, y_train, y_test)
 
-    return report, nn
+    return report, knn
 
 
 def run():
+    print("Running KNN ...")
     upsertDirectory(OUTPUT)
     data = load_data()
-    report, nn = run_iteration(data, {})
+    report, knn = run_iteration(data, {})
     print(report)

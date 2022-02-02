@@ -1,6 +1,7 @@
 data/
 venv/
 output/
+.vscode/
 
 *.ignore.*
 
