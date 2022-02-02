@@ -1,6 +1,6 @@
-
+from pathlib import Path
 from .paths import OUTPUT_DIR
 
 
-def upsertOutputDirectory(path):
-    (OUTPUT_DIR / path).mkdir(parents=True, exist_ok=True)
+def upsertDirectory(path):
+    Path(path).mkdir(parents=True, exist_ok=True)

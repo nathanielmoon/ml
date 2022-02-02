@@ -25,4 +25,5 @@ def analyze_classification(run, X_train, X_test, y_train, y_test):
 
     # Combine report
     report = pd.concat([train_report, test_report], ignore_index=True)
-    print(report)
+
+    return report
