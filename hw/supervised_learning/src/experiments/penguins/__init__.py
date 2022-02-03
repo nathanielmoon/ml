@@ -7,7 +7,7 @@ from .knn import run as knn_run
 
 def run():
     # dt_run()
-    # nn_run()
+    nn_run()
     # dtb_run()
     # svm_run()
-    knn_run()
+    # knn_run()
