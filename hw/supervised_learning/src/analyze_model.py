@@ -10,7 +10,8 @@ def analyze_classification(run, X_train, X_test, y_train, y_test):
 
     # Train data report
     y_pred = run(X_train)
-    train_report = classification_report(y_train, y_pred, output_dict=True)
+    train_report = classification_report(
+        y_train, y_pred, output_dict=True, zero_division=0)
     train_report = pd.DataFrame(train_report).transpose()
     train_report = train_report.reset_index().rename(
         columns={'index': 'class'})
@@ -18,7 +19,8 @@ def analyze_classification(run, X_train, X_test, y_train, y_test):
 
     # Test data report
     y_pred = run(X_test)
-    test_report = classification_report(y_test, y_pred, output_dict=True)
+    test_report = classification_report(
+        y_test, y_pred, output_dict=True, zero_division=0)
     test_report = pd.DataFrame(test_report).transpose()
     test_report = test_report.reset_index().rename(columns={'index': 'class'})
     test_report.insert(0, 'mode', 'test')
