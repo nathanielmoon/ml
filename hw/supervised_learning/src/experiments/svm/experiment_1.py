@@ -6,7 +6,7 @@ import seaborn as sns
 
 from src.loaders.penguins import load_data as load_penguins
 from src.analyze_model import analyze_classification
-from src.util import upsertDirectory
+from src.util import upsert_directory
 from src.paths import OUTPUT_DIR
 
 OUTPUT = OUTPUT_DIR / 'svm/experiment_1/'
@@ -80,7 +80,7 @@ def run_iteration(data, **params):
 
 def run():
     print("Running SVM Experiment 1 ...")
-    upsertDirectory(OUTPUT)
+    upsert_directory(OUTPUT)
 
     kernels = ['linear', 'poly', 'rbf', 'sigmoid']
 

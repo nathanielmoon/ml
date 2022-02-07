@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 
 
-def upsertDirectory(path):
+def upsert_directory(path):
     Path(path).mkdir(parents=True, exist_ok=True)
 
 

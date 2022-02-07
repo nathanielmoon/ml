@@ -18,9 +18,15 @@ def boop(ctx):
     from src.loaders.hypersphere import load_data, plot_dataset
     load_data()
     np.random.seed(42)
-    X, y = load_data(
+    X, _, y, _ = load_data(
         n_dimensions=2,
-        n_samples=1000,
-        n_classes=3
+        n_samples=10000,
+        n_classes=4
     )
     plot_dataset(X, y)
+
+
+@task
+def plot_penguins(ctx):
+    from src.loaders.penguins import plot_data
+    plot_data()

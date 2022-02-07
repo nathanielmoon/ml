@@ -1,15 +1,15 @@
-
-from sklearn.svm import SVC
+from sklearn import tree
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+from sklearn.ensemble import AdaBoostClassifier
 
-from src.loaders.hypersphere import load_data as load_spheres
+from src.loaders.hypersphere import load_data
 from src.analyze_model import analyze_classification
-from src.util import upsert_directory, resplit_data
+from src.util import upsert_directory
 from src.paths import OUTPUT_DIR
 
-OUTPUT = OUTPUT_DIR / 'svm/experiment_4/'
+OUTPUT = OUTPUT_DIR / 'bdt/experiment_4/'
 
 
 def generate_outputs(results, data):
@@ -61,26 +61,28 @@ def generate_outputs(results, data):
 
 
 def run_iteration(**params):
-    X_train, X_test, y_train, y_test = load_spheres(
+    X_train, X_test, y_train, y_test = load_data(
         n_classes=params['cc'],
-        n_dimensions=2,
+        n_dimensions=3,
         n_samples=10000
     )
 
-    svm = SVC(gamma='auto', kernel='rbf')
-
-    svm.fit(X_train, y_train)
+    dt = AdaBoostClassifier(tree.DecisionTreeClassifier(
+        random_state=42,
+        min_samples_leaf=5
+    ))
+    dt.fit(X_train, y_train)
 
     def predict(X):
-        return svm.predict(X)
+        return dt.predict(X)
 
     report = analyze_classification(predict, X_train, X_test, y_train, y_test)
 
-    return report, svm
+    return report, dt
 
 
 def run():
-    print("Running SVM Experiment 4 ...")
+    print("Running BDT Experiment 4 ...")
     upsert_directory(OUTPUT)
 
     class_counts = [2, 3, 4, 5]
@@ -88,7 +90,7 @@ def run():
     iter_results = []
     for i, cc in enumerate(class_counts):
         print(
-            f"\t({i + 1}/{len(class_counts)}) Running SVM with num classes = {cc}")
+            f"\t({i + 1}/{len(class_counts)}) Running DT with num classes = {cc}")
 
         iteration_report, model = run_iteration(cc=cc)
 

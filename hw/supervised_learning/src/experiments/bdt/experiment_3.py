@@ -1,26 +1,25 @@
-
-from sklearn.svm import SVC
+from sklearn import tree
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+from sklearn.ensemble import AdaBoostClassifier
 
-from src.loaders.hypersphere import load_data as load_spheres
+from src.loaders.penguins import load_data
 from src.analyze_model import analyze_classification
 from src.util import upsert_directory, resplit_data
 from src.paths import OUTPUT_DIR
 
-OUTPUT = OUTPUT_DIR / 'svm/experiment_3/'
+OUTPUT = OUTPUT_DIR / 'bdt/experiment_3/'
 
 
 def generate_outputs(results, data):
-    print("\tGenerating outputs ...")
     sns.set()
 
     # Generate full data report
     report = pd.concat([x[1] for x in results], ignore_index=True)
     report.to_csv(OUTPUT / 'report.csv')
 
-    # Generate accuracies by tp
+    # Generate accuracies by kernel
     plt.clf()
     reduced_report = report[report['class'] == 'accuracy'][[
         'train_percent', 'mode', 'precision']]
@@ -28,12 +27,12 @@ def generate_outputs(results, data):
     reduced_report = reduced_report.pivot(
         index='train_percent', columns='split', values='precision')
     sns.lineplot(data=reduced_report)
-    plt.title('Accuracy by Train Percentage')
-    plt.xlabel('Train Percentage')
+    plt.title('Accuracy by Train Percent')
+    plt.xlabel('Train Percent')
     plt.ylabel('Accuracy')
-    plt.savefig(OUTPUT / 'accuracy_by_tp.png')
+    plt.savefig(OUTPUT / 'accuracy_by_train_percent.png')
 
-    # Generate precision by tp
+    # Generate precision by kernel
     plt.clf()
     reduced_report = report[report['class'] == 'macro avg'][[
         'train_percent', 'mode', 'precision']]
@@ -41,12 +40,12 @@ def generate_outputs(results, data):
     reduced_report = reduced_report.pivot(
         index='train_percent', columns='split', values='precision')
     sns.lineplot(data=reduced_report)
-    plt.title('Precision by Train Percentage')
-    plt.xlabel('Train Percentage')
+    plt.title('Precision by Train Percent')
+    plt.xlabel('Train Percent')
     plt.ylabel('Precision')
-    plt.savefig(OUTPUT / 'precision_by_tp.png')
+    plt.savefig(OUTPUT / 'precision_by_train_percent.png')
 
-    # Generate f1 by tp
+    # Generate f1 by kernel
     plt.clf()
     reduced_report = report[report['class'] == 'macro avg'][[
         'train_percent', 'mode', 'f1-score']]
@@ -54,42 +53,40 @@ def generate_outputs(results, data):
     reduced_report = reduced_report.pivot(
         index='train_percent', columns='split', values='f1-score')
     sns.lineplot(data=reduced_report)
-    plt.title('F1 Score by Train Percentage')
-    plt.xlabel('Train Percentage')
+    plt.title('F1 Score by Train Percent')
+    plt.xlabel('Train Percent')
     plt.ylabel('F1 Score')
-    plt.savefig(OUTPUT / 'f1_by_tp.png')
+    plt.savefig(OUTPUT / 'f1_by_train_percent.png')
 
 
 def run_iteration(data, **params):
     X_train, X_test, y_train, y_test = resplit_data(params['tp'], *data)
 
-    svm = SVC(gamma='auto', kernel='rbf')
-
-    svm.fit(X_train, y_train)
+    dt = AdaBoostClassifier(tree.DecisionTreeClassifier(
+        random_state=42,
+        min_samples_leaf=5
+    ))
+    dt.fit(X_train, y_train)
 
     def predict(X):
-        return svm.predict(X)
+        return dt.predict(X)
 
     report = analyze_classification(predict, X_train, X_test, y_train, y_test)
 
-    return report, svm
+    return report, dt
 
 
 def run():
-    print("Running SVM Experiment 3 ...")
+    print("Running BDT Experiment 3 ...")
     upsert_directory(OUTPUT)
 
     train_percents = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 
-    data = load_spheres(
-        n_classes=3,
-        n_dimensions=3,
-        n_samples=1000
-    )
+    data = load_data()
     iter_results = []
     for i, tp in enumerate(train_percents):
         print(
-            f"\t({i + 1}/{len(train_percents)}) Running SVM with train % = {tp}")
+            f"\t({i + 1}/{len(train_percents)}) Running DT with train % = {tp}")
 
         iteration_report, model = run_iteration(data, tp=tp)
 

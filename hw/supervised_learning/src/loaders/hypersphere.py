@@ -9,7 +9,7 @@ from scipy.special import gamma
 from sklearn.model_selection import train_test_split
 
 
-from src.util import upsertDirectory
+from src.util import upsert_directory
 from src.paths import OUTPUT_DIR
 
 
@@ -73,12 +73,15 @@ def load_data(**kwargs):
 
 def plot_dataset(X, y):
     sns.set()
-    upsertDirectory(OUTPUT_DIR)
+    sns.set_palette(sns.color_palette("husl", 10))
+    upsert_directory(OUTPUT_DIR)
     df = pd.DataFrame(X)
     df = df.rename(columns={0: 'x1', 1: 'x2'})
     df['y'] = y
 
-    sns.scatterplot(data=df, x="x1", y="x2", hue="y")
+    sns.scatterplot(data=df, x="x1", y="x2", hue="y",
+                    # palette=sns.color_palette(None),
+                    s=10)
     plt.title('2D Hypersphere Dataset')
     plt.legend(loc='upper right', bbox_to_anchor=(1.1, 1))
     plt.savefig(OUTPUT_DIR / '2d-hypersphere-dataset.png')
