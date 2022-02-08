@@ -27,10 +27,10 @@ def generate_outputs(results, data):
     reduced_report = reduced_report.pivot(
         index='min_samples_leaf', columns='split', values='precision')
     sns.lineplot(data=reduced_report)
-    plt.title('Accuracy by Min Samples Leaf Hyperparameter')
+    plt.title('Penguin Boosted DT Accuracy by Min Samples Leaf')
     plt.xlabel('Min Samples Leaf')
     plt.ylabel('Accuracy')
-    plt.savefig(OUTPUT / 'accuracy_by_min_samples_leaf.png')
+    plt.savefig(OUTPUT / 'btd_accuracy_penguin_by_min_samples_leaf.png')
 
     # Generate precision by kernel
     plt.clf()
@@ -40,10 +40,10 @@ def generate_outputs(results, data):
     reduced_report = reduced_report.pivot(
         index='min_samples_leaf', columns='split', values='precision')
     sns.lineplot(data=reduced_report)
-    plt.title('Precision by Min Samples Leaf Hyperparameter')
+    plt.title('Boosted DT Precision by Min Samples Leaf Hyperparameter')
     plt.xlabel('Min Samples Leaf')
     plt.ylabel('Precision')
-    plt.savefig(OUTPUT / 'precision_by_min_samples_leaf.png')
+    plt.savefig(OUTPUT / 'btd_precision_penguin_by_min_samples_leaf.png')
 
     # Generate f1 by kernel
     plt.clf()
@@ -53,10 +53,10 @@ def generate_outputs(results, data):
     reduced_report = reduced_report.pivot(
         index='min_samples_leaf', columns='split', values='f1-score')
     sns.lineplot(data=reduced_report)
-    plt.title('F1 Score by Min Samples Leaf Hyperparameter')
+    plt.title('Boosted DT F1 Score by Min Samples Leaf Hyperparameter')
     plt.xlabel('Min Samples Leaf')
     plt.ylabel('F1 Score')
-    plt.savefig(OUTPUT / 'f1_by_min_samples_leaf.png')
+    plt.savefig(OUTPUT / 'btd_f1_penguin_by_min_samples_leaf.png')
 
 
 def run_iteration(data, params):
@@ -80,7 +80,7 @@ def run():
     upsert_directory(OUTPUT)
     data = load_data()
 
-    min_samples_leafs = [1, 2, 3, 4, 5, 10, 20, 50]
+    min_samples_leafs = [1, 2, 3, 4, 5, 10, 15, 20, 25, 50]
 
     iter_results = []
     for i, min_samples_leaf in enumerate(min_samples_leafs):

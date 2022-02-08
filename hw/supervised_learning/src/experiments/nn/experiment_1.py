@@ -29,7 +29,7 @@ def generate_outputs(results, data):
     plt.title('Accuracy by Min Samples Leaf Hyperparameter')
     plt.xlabel('Min Samples Leaf')
     plt.ylabel('Accuracy')
-    plt.savefig(OUTPUT / 'accuracy_by_min_samples_leaf.png')
+    plt.savefig(OUTPUT / 'nn_accuracy_peng_by_min_samples_leaf.png')
 
     # Generate precision by kernel
     plt.clf()

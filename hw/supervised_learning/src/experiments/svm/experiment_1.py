@@ -31,10 +31,10 @@ def generate_outputs(results, data):
     reduced_report = reduced_report.pivot(
         index='kernel', columns='split', values='precision')
     sns.scatterplot(data=reduced_report, s=60)
-    plt.title('Accuracy by Kernel Hyperparameter')
+    plt.title('Penguin SVM Accuracy by Kernel')
     plt.xlabel('Kernel')
     plt.ylabel('Accuracy')
-    plt.savefig(OUTPUT / 'accuracy_by_kernel.png')
+    plt.savefig(OUTPUT / 'svm_peng_accuracy_by_kernel.png')
 
     # Generate precision by kernel
     plt.clf()
@@ -44,10 +44,10 @@ def generate_outputs(results, data):
     reduced_report = reduced_report.pivot(
         index='kernel', columns='split', values='precision')
     sns.scatterplot(data=reduced_report, s=60)
-    plt.title('Precision by Kernel Hyperparameter')
+    plt.title('SVM Precision by Kernel')
     plt.xlabel('Kernel')
     plt.ylabel('Precision')
-    plt.savefig(OUTPUT / 'precision_by_kernel.png')
+    plt.savefig(OUTPUT / 'svm_precision_peng_by_kernel.png')
 
     # Generate f1 by kernel
     plt.clf()
@@ -57,10 +57,10 @@ def generate_outputs(results, data):
     reduced_report = reduced_report.pivot(
         index='kernel', columns='split', values='f1-score')
     sns.scatterplot(data=reduced_report, s=60)
-    plt.title('F1 Score by Kernel Hyperparameter')
+    plt.title('SVM F1 Score by Kernel')
     plt.xlabel('Kernel')
     plt.ylabel('F1 Score')
-    plt.savefig(OUTPUT / 'f1_by_kernel.png')
+    plt.savefig(OUTPUT / 'svm_f1_peng_by_kernel.png')
 
 
 def run_iteration(data, **params):

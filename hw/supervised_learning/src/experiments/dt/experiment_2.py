@@ -35,10 +35,10 @@ def generate_outputs(results, data):
     reduced_report = reduced_report.pivot(
         index='min_samples_leaf', columns='split', values='precision')
     sns.lineplot(data=reduced_report)
-    plt.title('Accuracy by Min Samples Leaf Hyperparameter')
+    plt.title('Hypersphere Decision Tree Accuracy by Min Samples Leaf')
     plt.xlabel('Min Samples Leaf')
     plt.ylabel('Accuracy')
-    plt.savefig(OUTPUT / 'accuracy_by_min_samples_leaf.png')
+    plt.savefig(OUTPUT / 'dt_accuracy_by_min_samples_leaf.png')
 
     # Generate precision by kernel
     plt.clf()
@@ -48,10 +48,10 @@ def generate_outputs(results, data):
     reduced_report = reduced_report.pivot(
         index='min_samples_leaf', columns='split', values='precision')
     sns.lineplot(data=reduced_report)
-    plt.title('Precision by Min Samples Leaf Hyperparameter')
+    plt.title('Decision Tree Precision by Min Samples Leaf')
     plt.xlabel('Min Samples Leaf')
     plt.ylabel('Precision')
-    plt.savefig(OUTPUT / 'precision_by_min_samples_leaf.png')
+    plt.savefig(OUTPUT / 'dt_precision_by_min_samples_leaf.png')
 
     # Generate f1 by kernel
     plt.clf()
@@ -61,10 +61,10 @@ def generate_outputs(results, data):
     reduced_report = reduced_report.pivot(
         index='min_samples_leaf', columns='split', values='f1-score')
     sns.lineplot(data=reduced_report)
-    plt.title('F1 Score by Min Samples Leaf Hyperparameter')
+    plt.title('Decision Tree F1 Score by Min Samples Leaf')
     plt.xlabel('Min Samples Leaf')
     plt.ylabel('F1 Score')
-    plt.savefig(OUTPUT / 'f1_by_min_samples_leaf.png')
+    plt.savefig(OUTPUT / 'dt_f1_by_min_samples_leaf.png')
 
 
 def run_iteration(data, params):
@@ -87,9 +87,9 @@ def run():
     print("Running DT Experiment 2 ...")
     upsert_directory(OUTPUT)
     data = load_data(
-        n_classes=3,
+        n_classes=5,
         n_dimensions=3,
-        n_samples=1000
+        n_samples=10000
     )
 
     min_samples_leafs = [1, 2, 3, 4, 5, 10, 20, 50]
