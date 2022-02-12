@@ -26,7 +26,7 @@ def generate_outputs(results, data):
     reduced_report = reduced_report.pivot(
         index='n_hidden_layers', columns='split', values='precision')
     sns.lineplot(data=reduced_report)
-    plt.title('Neural Network Accuracy by Number of Layers')
+    plt.title('Hypersphere Neural Network Accuracy by Number of Layers')
     plt.xlabel('Number of Layers')
     plt.ylabel('Accuracy')
     plt.savefig(OUTPUT / 'nn_sphere_accuracy_by_n_hidden_layers.png')
