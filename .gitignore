@@ -9,3 +9,6 @@ output/
 *.pyc
 *.png
 *.csv
+*.pdf
+
+README.txt
