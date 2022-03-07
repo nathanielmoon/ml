@@ -1,5 +1,3 @@
-from cgi import test
-import json
 
 import pandas as pd
 from sklearn.metrics import classification_report
