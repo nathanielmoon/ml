@@ -1,4 +1,5 @@
 import sys
+import math
 
 import numpy as np
 from extern.pymdptoolbox.src.mdptoolbox.mdp import (
@@ -208,7 +209,7 @@ def simulate(Policy, P, R, world_, verbose=False, max_steps=1000):
 
 
 def compute_theoretical_reward_and_utility(
-    model, P, R, W, max_steps=100, verbose=False
+    model, P, R, W, max_steps=100, verbose=False, gamma=1
 ):
     def has_died(p):
         return R[p] == DEATH_REWARD
@@ -216,18 +217,19 @@ def compute_theoretical_reward_and_utility(
     def has_won(p):
         return R[p] == WIN_REWARD
 
-    def apply_move(pos, r, u):
+    def apply_move(pos, r, u, step):
         coords = position_to_coords(pos, W)
         a = model.policy[pos]
         next_pos = take_action(a, coords, W)
-        return next_pos, r + R[next_pos], u + model.V[next_pos]
+        r_ = r + (R[next_pos] * math.pow(gamma, step))
+        return next_pos, r_, u + model.V[next_pos]
 
     utility = 0
     reward = 0
     step = 0
     position = 0
     while not has_died(position) and not has_won(position) and step < max_steps:
-        position, reward, utility = apply_move(position, reward, utility)
+        position, reward, utility = apply_move(position, reward, utility, step=step)
         step += 1
         if verbose:
             print(

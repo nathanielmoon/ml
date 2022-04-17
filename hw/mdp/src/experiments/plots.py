@@ -68,7 +68,7 @@ def plot_lotr_policy(matrix, utility, world, filename, title=""):
         3: "gold",
     }
 
-    fig = plt.figure(figsize=(24, 20))
+    fig = plt.figure(figsize=(12, 10))
     ax = fig.add_subplot(111, xlim=(0, matrix.shape[1]), ylim=(0, matrix.shape[0]))
     font_size = "x-large"
     if matrix.shape[1] > 16:
@@ -180,19 +180,19 @@ def plot_iterative_curve(
 
 
 def plot_utilityreward_by_discount(
-    utilities, rewards, discounts, title="", filename=""
+    utilities, rewards, discounts, title="", filename="", xlabel="Discount"
 ):
     plt.clf()
     data = pd.DataFrame(
         {
             "Utility": utilities,
             "Reward": rewards,
-            "Discount": discounts,
+            xlabel: discounts,
         },
     )
-    ax = data.plot(x="Discount", y="Utility", legend=False, color="g")
+    ax = data.plot(x=xlabel, y="Utility", legend=False, color="g")
     ax2 = ax.twinx()
-    data.plot(x="Discount", y="Reward", ax=ax2, legend=False, color="b")
+    data.plot(x=xlabel, y="Reward", ax=ax2, legend=False, color="b")
     ax.set_ylabel("Utility")
     ax2.set_ylabel("Reward")
     ax.figure.legend(loc="upper left")
@@ -200,10 +200,10 @@ def plot_utilityreward_by_discount(
     plt.savefig(OUTPUT_DIR / filename)
 
 
-def plot_iters_by_discount(discounts, iters, title="", filename=""):
+def plot_iters_by_discount(discounts, iters, title="", filename="", xlabel="Discount"):
     plt.clf()
-    df = pd.DataFrame({"Iteration": iters, "Discount": discounts})
-    sns.lineplot(data=df, x="Discount", y="Iteration")
+    df = pd.DataFrame({"Iteration": iters, xlabel: discounts})
+    sns.lineplot(data=df, x=xlabel, y="Iteration")
     plt.title(title)
     plt.savefig(OUTPUT_DIR / filename)
 

@@ -830,7 +830,9 @@ class PolicyIteration(MDP):
         self._startRun()
         signal = []
 
+        times = []
         while True:
+            start = _time.time_ns()
             self.iter += 1
             # these _evalPolicy* functions will update the classes value
             # attribute
@@ -851,6 +853,8 @@ class PolicyIteration(MDP):
             # Once the policy is unchanging of the maximum number of
             # of iterations has been reached then stop
 
+            end = _time.time_ns()
+            times.append(end - start)
             if hook:
                 signal.append(hook(self, **params, variation=n_different))
 
@@ -865,6 +869,7 @@ class PolicyIteration(MDP):
             else:
                 self.policy = policy_next
 
+        print("AVG TIME", _np.array(times).mean())
         self._endRun()
         return signal
 
@@ -1065,7 +1070,7 @@ class QLearning(MDP):
     """
 
     def __init__(
-        self, transitions, reward, discount, n_iter=10000, alpha=0.5, skip_check=False
+        self, transitions, reward, discount, n_iter=10000, alpha=0.99, skip_check=False
     ):
         # Initialise a Q-learning MDP.
 
@@ -1092,21 +1097,21 @@ class QLearning(MDP):
         self.Q = _np.zeros((self.S, self.A))
         self.mean_discrepancy = []
 
-    def run(self, hook=None, params={}):
+    def run(self, hook=None, params={}, n_steps=1000, move=None, W=None):
         # Run the Q-learning algoritm.
         discrepancy = []
 
         self.time = _time.time()
 
         # initial state choice
-        s = _np.random.randint(0, self.S)
+        start_pos = 0
+        s = start_pos
         signals = []
 
         for n in range(1, self.max_iter + 1):
-
             # Reinitialisation of trajectories every 100 transitions
-            if (n % 100) == 0:
-                s = _np.random.randint(0, self.S)
+            if (n % n_steps) == 0:
+                s = start_pos
 
             # Action choice : greedy with increasing probability
             # probability 1-(1/log(n+2)) can be changed
@@ -1136,14 +1141,14 @@ class QLearning(MDP):
             # Updating the value of Q
             # Decaying update coefficient (1/sqrt(n+2)) can be changed
             delta = r + self.discount * self.Q[s_new, :].max() - self.Q[s, a]
-            dQ = self.alpha * delta
+            dQ = (1 / _math.sqrt(n + 2)) * delta
             self.Q[s, a] = self.Q[s, a] + dQ
 
             # current state is updated
             s = s_new
 
             # Computing and saving maximal values of the Q variation
-            discrepancy.append(delta)
+            discrepancy.append(_np.absolute(dQ))
 
             # Computing means all over maximal Q variations values
             if len(discrepancy) == 100:
@@ -1155,7 +1160,7 @@ class QLearning(MDP):
             self.policy = self.Q.argmax(axis=1)
 
             if hook:
-                signal = hook(self, **params, variation=_np.absolute(dQ))
+                signal = hook(self, **params, variation=0.0)
                 signals.append(signal)
 
         self._endRun()

@@ -52,10 +52,10 @@ class QLearner(object):
         self,
         num_states=100,
         num_actions=4,
-        alpha=0.2,
+        alpha=0.4,
         gamma=0.9,
-        rar=0.9999,
-        radr=0.99,
+        rar=0.9,
+        radr=0.9,
         dyna=0,
         verbose=False,
     ):
@@ -155,11 +155,26 @@ class QLearner(object):
         self.rar = self.rar * self.radr
         return action
 
-    def run(self, P, R, W, move, has_won, has_lost, n_epochs=1000, max_iters=1000):
+    def run(
+        self,
+        P,
+        R,
+        has_won,
+        has_lost,
+        n_epochs=1000,
+        max_iters=1000,
+        hook=None,
+        W=None,
+        simulate=None,
+    ):
         all_rewards = np.zeros(n_epochs)
         start_pos = 0
+        n = P.shape[1]
+        nrange = range(n)
+        signals = []
+        times = []
         for epoch in range(n_epochs):
-            print("Epoch:", epoch)
+            start = time.time_ns()
             total_reward = 0
             s = start_pos
             a = self.querysetstate(s)
@@ -169,20 +184,43 @@ class QLearner(object):
                 and not has_lost(s, total_reward)
                 and step < max_iters
             ):
-                print("\tStep:", step)
-                s_, r = move(s, a, P, R, W)
+                s_ = np.random.choice(nrange, p=P[a][s])
+                r = None
+                if len(R.shape) == 1:
+                    r = R[s_]
+                else:
+                    r = R[s][a]
                 a = self.query(s_, r)
                 total_reward += r
                 s = s_
                 step += 1
 
+            end = time.time_ns()
+            times.append(end - start)
+            if hook:
+                signal = hook(
+                    self,
+                    simulate=simulate,
+                    P=P,
+                    R=R,
+                    W=W,
+                    variation=0.0,
+                    max_steps=n * 2,
+                    gamma=self.gamma,
+                )
+                signals.append(signal)
             all_rewards[epoch] = total_reward
 
-        return np.median(all_rewards)
+        print("AVG", np.array(times).mean())
+        return signals
 
     @property
     def policy(self):
         return np.argmax(self.q_table, axis=1)
+
+    @property
+    def V(self):
+        return np.max(self.q_table, axis=1)
 
 
 if __name__ == "__main__":

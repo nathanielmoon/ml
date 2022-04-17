@@ -1,4 +1,4 @@
-from tabnanny import verbose
+import math
 import mdptoolbox.example
 from extern.pymdptoolbox.src.mdptoolbox.mdp import (
     PolicyIteration,
@@ -12,8 +12,8 @@ sim_years = 100
 
 def create(n=3):
     _n = n
-    r1 = _n + 5
-    r2 = _n * 10
+    r1 = _n + 10
+    r2 = _n * 1000000
     p = 0.1
     P, R = mdptoolbox.example.forest(S=_n, r1=r1, r2=r2, p=p)
     return P, R, None
@@ -47,15 +47,14 @@ def simulate(Policy, P, R, world_, verbose=False, max_steps=100):
 
 
 def compute_theoretical_reward_and_utility(
-    model, P, R, W, max_steps=100, verbose=False
+    model, P, R, W, max_steps=100, verbose=False, gamma=1
 ):
-    def apply_move(pos, r, u):
+    def apply_move(pos, r, u, step):
         a = model.policy[pos]
         s_s = P[a][pos]
         s_ = np.argmax(s_s)
-        if P.shape[1] == 7 and False:
-            print("a =", a, "pos =", pos, "s_ =", s_)
-        return s_, r + R[pos][a], u + model.V[s_]
+        r_ = r + (R[pos][a] * math.pow(gamma, step))
+        return s_, r_, u + model.V[s_]
 
     reward = 0
     utility = 0
@@ -65,7 +64,7 @@ def compute_theoretical_reward_and_utility(
     if verbose:
         print("Simulating ...")
     while step < max_steps:
-        position, reward, utility = apply_move(position, reward, utility)
+        position, reward, utility = apply_move(position, reward, utility, step)
         step += 1
         if verbose:
             print(f"\tStep = {step}, Position = {position}, Reward = {reward}")

@@ -45,10 +45,11 @@ def hook(
     W=None,
     variation=None,
     max_steps=100,
+    gamma=1,
 ):
     sim = None
     if simulate:
-        sim = simulate(model, P, R, W, verbose=False, max_steps=max_steps)
+        sim = simulate(model, P, R, W, verbose=False, max_steps=max_steps, gamma=gamma)
 
     return (
         variation,
@@ -66,14 +67,15 @@ def run_discounts(P, R, W, simulate):
                 discount,
                 model.iter,
                 model.time,
-                simulate(model, P, R, W, max_steps=P.shape[1] * 2),
+                simulate(model, P, R, W, max_steps=P.shape[1] * 2, gamma=discount),
             )
         )
     return results
 
 
 def run_iteratives(P, R, W, simulate):
-    model = PolicyIteration(P, R, 0.95, max_iter=1000)
+    gamma = 0.98
+    model = PolicyIteration(P, R, gamma, max_iter=1000)
     signal = model.run(
         hook=hook,
         params={
@@ -82,8 +84,12 @@ def run_iteratives(P, R, W, simulate):
             "W": W,
             "simulate": simulate,
             "max_steps": P.shape[1] * 2,
+            "gamma": gamma,
         },
     )
+    print("POLCIY")
+    print(model.policy)
+    print(model.V)
     return signal, model
 
 
@@ -152,8 +158,8 @@ def plots(results):
     )
 
     plot_iters_by_discount(
-        [x[0] for x in results[LOTR_LABEL][7]["discount"]],
-        [x[1] for x in results[LOTR_LABEL][7]["discount"]],
+        [x[0] for x in results[LOTR_LABEL][lotr_small]["discount"]],
+        [x[1] for x in results[LOTR_LABEL][lotr_small]["discount"]],
         title="LOTR Small PI Iterations by Discount",
         filename="pi-lotr-small-iters.png",
     )
@@ -164,8 +170,8 @@ def plots(results):
         filename="pi-lotr-large-iters.png",
     )
     plot_iters_by_discount(
-        [x[0] for x in results[FOREST_LABEL][7]["discount"]],
-        [x[1] for x in results[FOREST_LABEL][7]["discount"]],
+        [x[0] for x in results[FOREST_LABEL][forest_small]["discount"]],
+        [x[1] for x in results[FOREST_LABEL][forest_small]["discount"]],
         title="Forest Small PI Iterations by Discount",
         filename="pi-forest-small-iters.png",
     )
@@ -177,8 +183,8 @@ def plots(results):
     )
 
     plot_time_by_discount(
-        [x[0] for x in results[LOTR_LABEL][7]["discount"]],
-        [x[2] * 1000000 for x in results[LOTR_LABEL][7]["discount"]],
+        [x[0] for x in results[LOTR_LABEL][lotr_small]["discount"]],
+        [x[2] * 1000000 for x in results[LOTR_LABEL][lotr_small]["discount"]],
         title="LOTR Small PI Times by Discount",
         filename="pi-lotr-small-times.png",
     )
@@ -189,8 +195,8 @@ def plots(results):
         filename="pi-lotr-large-times.png",
     )
     plot_time_by_discount(
-        [x[0] for x in results[FOREST_LABEL][7]["discount"]],
-        [x[2] * 1000000 for x in results[FOREST_LABEL][7]["discount"]],
+        [x[0] for x in results[FOREST_LABEL][forest_small]["discount"]],
+        [x[2] * 1000000 for x in results[FOREST_LABEL][forest_small]["discount"]],
         title="Forest Small PI Times by Discount",
         filename="pi-forest-small-times.png",
     )
@@ -202,30 +208,30 @@ def plots(results):
     )
 
     plot_utilityreward_by_discount(
-        [x[3][1] for x in results[LOTR_LABEL][7]["discount"]],
-        [x[3][0] for x in results[LOTR_LABEL][7]["discount"]],
-        [x[0] for x in results[LOTR_LABEL][7]["discount"]],
+        [x[3][1] for x in results[LOTR_LABEL][lotr_small]["discount"]],
+        [x[3][0] for x in results[LOTR_LABEL][lotr_small]["discount"]],
+        [x[0] for x in results[LOTR_LABEL][lotr_small]["discount"]],
         title="LOTR Small Reward by Discount",
         filename="pi-lotr-small-discountxrewards.png",
     )
     plot_utilityreward_by_discount(
         [x[3][1] for x in results[LOTR_LABEL][lotr_large]["discount"]],
         [x[3][0] for x in results[LOTR_LABEL][lotr_large]["discount"]],
-        [x[0] for x in results[LOTR_LABEL][7]["discount"]],
+        [x[0] for x in results[LOTR_LABEL][lotr_large]["discount"]],
         title="LOTR Large Reward by Discount",
         filename="pi-lotr-large-discountxrewards.png",
     )
     plot_utilityreward_by_discount(
-        [x[3][1] for x in results[FOREST_LABEL][7]["discount"]],
-        [x[3][0] for x in results[FOREST_LABEL][7]["discount"]],
-        [x[0] for x in results[LOTR_LABEL][7]["discount"]],
+        [x[3][1] for x in results[FOREST_LABEL][forest_small]["discount"]],
+        [x[3][0] for x in results[FOREST_LABEL][forest_small]["discount"]],
+        [x[0] for x in results[FOREST_LABEL][forest_small]["discount"]],
         title="Forest Small Reward by Discount",
         filename="pi-forest-small-discountxrewards.png",
     )
     plot_utilityreward_by_discount(
         [x[3][1] for x in results[FOREST_LABEL][forest_large]["discount"]],
         [x[3][0] for x in results[FOREST_LABEL][forest_large]["discount"]],
-        [x[0] for x in results[LOTR_LABEL][7]["discount"]],
+        [x[0] for x in results[FOREST_LABEL][forest_large]["discount"]],
         title="Forest Large Reward by Discount",
         filename="pi-forest-large-discountxrewards.png",
     )
@@ -241,19 +247,19 @@ def plots(results):
         filename="pi-lotr-large-deltaxiterations.png",
     )
     plot_delta_by_iterations(
-        [x[0] for x in results[FOREST_LABEL][7]["iterations"]],
-        title="LOTR Small PI Delta by Iteration",
+        [x[0] for x in results[FOREST_LABEL][forest_small]["iterations"]],
+        title="Forest Small PI Delta by Iteration",
         filename="pi-forest-small-deltaxiterations.png",
     )
     plot_delta_by_iterations(
         [x[0] for x in results[FOREST_LABEL][forest_large]["iterations"]],
-        title="LOTR Large PI Delta by Iteration",
+        title="Forest Large PI Delta by Iteration",
         filename="pi-forest-large-deltaxiterations.png",
     )
 
     plot_utilityreward_by_iterations(
-        [x[1][1] for x in results[LOTR_LABEL][7]["iterations"]],
-        [x[1][0] for x in results[LOTR_LABEL][7]["iterations"]],
+        [x[1][1] for x in results[LOTR_LABEL][lotr_small]["iterations"]],
+        [x[1][0] for x in results[LOTR_LABEL][lotr_small]["iterations"]],
         title="LOTR Small Reward by Iteration",
         filename="pi-lotr-small-iterxrewards.png",
     )
@@ -264,8 +270,8 @@ def plots(results):
         filename="pi-lotr-large-iterxrewards.png",
     )
     plot_utilityreward_by_iterations(
-        [x[1][1] for x in results[FOREST_LABEL][7]["iterations"]],
-        [x[1][0] for x in results[FOREST_LABEL][7]["iterations"]],
+        [x[1][1] for x in results[FOREST_LABEL][forest_small]["iterations"]],
+        [x[1][0] for x in results[FOREST_LABEL][forest_small]["iterations"]],
         title="Forest Small Reward by Iteration",
         filename="pi-forest-small-iterxrewards.png",
     )

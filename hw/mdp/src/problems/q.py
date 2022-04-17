@@ -4,32 +4,33 @@ from src.problems.lotr import (
     position_to_coords,
     actions,
     coords_to_position,
+    get_possible_actions,
 )
+from src.experiments.plots import plot_lotr_policy
+from src.util import round_
+
+import numpy as np
 
 
 def move_lotr(s, a, P, R, W):
-    print("MOVING", s, a)
     x, y = position_to_coords(s, W)
-    dimsize = W.shape[0]
-    s_ = None
-    if a == actions.up:
-        if x <= 0:
-            return s, 0
-        s_ = coords_to_position((x - 1, y), W)
-    if a == actions.down:
-        if x >= dimsize - 1:
-            return s, 0
-        s_ = coords_to_position((x + 1, y), W)
-    if a == actions.left:
-        if y <= 0:
-            return s, 0
-        s_ = coords_to_position((x, y - 1), W)
-    if a == actions.right:
-        if y >= dimsize - 1:
-            return s, 0
-        s_ = coords_to_position((x, y + 1), W)
+    possible_actions = get_possible_actions((x, y), W)
+    num_actions = len([x for x in possible_actions if x > -1])
 
-    print()
+    if possible_actions[a] > -1:
+        p = [
+            (1.0 - 0.95) / (num_actions - 1) if i != a and x > -1 else 0.0
+            for i, x in enumerate(possible_actions)
+        ]
+        p[a] = 0.95
+        s_ = np.random.choice(possible_actions, p=p)
+    else:
+        p = [
+            1.0 / num_actions if i != a and x > -1 else 0.0
+            for i, x in enumerate(possible_actions)
+        ]
+        s_ = np.random.choice(possible_actions, p=p)
+
     return s_, R[s_]
 
 
@@ -40,13 +41,22 @@ def test_lotr():
     def has_lost(s, r):
         return r < -99
 
-    P, R, W = create_lotr(n=32)
+    n = 7
+    P, R, W = create_lotr(n=n)
     model = QLearner(num_states=len(W.flatten()), num_actions=4)
     rewards = model.run(
         P, R, W, move_lotr, has_won, has_lost, n_epochs=1000, max_iters=1000
     )
     print(model.policy)
     print(rewards)
+
+    plot_lotr_policy(
+        np.array([round_(x) for x in model.policy]).reshape((n, n)),
+        np.array([round_(x) for x in model.V]).reshape((n, n)),
+        W,
+        "lotr-policy-q.png",
+        title="Small LOTR QL Policy and Utility",
+    )
 
 
 def run():
