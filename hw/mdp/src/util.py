@@ -29,3 +29,8 @@ def read_cache(dir, f):
 def pretty_print_policy(policy, token_map, dim_size=12):
     p = np.array([token_map[x] for x in policy])
     return np.reshape(p, (-1, dim_size))
+
+
+def round_(value, n=2):
+    scale = 10 * n
+    return int(value * scale) / scale

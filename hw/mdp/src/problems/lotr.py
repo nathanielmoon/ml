@@ -1,31 +1,33 @@
 import sys
 
 import numpy as np
-from mdptoolbox.mdp import PolicyIteration, ValueIteration, QLearning
+from extern.pymdptoolbox.src.mdptoolbox.mdp import (
+    PolicyIteration,
+    ValueIteration,
+    QLearning,
+)
+from src.experiments.plots import plot_lotr_policy
 
 from src.util import pretty_print_policy
 
 np.set_printoptions(threshold=sys.maxsize)
 
 
-DEATH_REWARD = -1000
-WIN_REWARD = 1000
+DEATH_REWARD = -100
+WIN_REWARD = 5
 tile_to_reward = [
     0,  # 0 - Normal tile
     DEATH_REWARD,  # 1 -  Death
     WIN_REWARD,  # 2 -  Objective
-    100,  # 3 - Danger
+    -1,  # 3 - Danger
 ]
 
 mount_doom = [
     [1, 0, 0, 1, 2],
-    [3, 0, 0, 1, 0],
     [1, 0, 0, 1, 0],
+    [3, 0, 0, 0, 0],
     [1, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0],
 ]
@@ -43,6 +45,17 @@ class actions:
 
 action_map = [actions.up, actions.down, actions.left, actions.right]
 readable_action_map = ["U", "D", "L", "R"]
+
+
+def generate_world(n):
+    world = np.zeros((n, n))
+    world = np.random.choice(
+        [x for x in range(len(tile_to_reward))], (n, n), p=[0.94, 0.02, 0.0, 0.04]
+    )
+    world[:7, -5:] = mount_doom
+    world[:2, :2] = 0
+
+    return world.astype("int32")
 
 
 def display(world_):
@@ -113,6 +126,7 @@ def get_tile_probabilities(a, coords, world_):
 def make_transition_matrix(world_):
     n_states = len(world_.flatten())
     matrix = np.zeros((n_actions, n_states, n_states))
+    print(world_)
 
     for a in range(0, n_actions):
         for s in range(0, n_states):
@@ -131,17 +145,6 @@ def make_reward_matrix(world_):
     return np.array([tile_to_reward[x] for x in world_.flatten()])
 
 
-def generate_world(n):
-    world = np.zeros((n, n))
-    world = np.random.choice(
-        [x for x in range(len(tile_to_reward))], (n, n), p=[0.94, 0.02, 0.0, 0.04]
-    )
-    world[:10, -5:] = mount_doom
-    world[:2, :2] = 0
-
-    return world.astype("int32")
-
-
 def create(n=10):
     world = generate_world(n)
     P = make_transition_matrix(world)
@@ -149,7 +152,7 @@ def create(n=10):
     return P, R, world
 
 
-def simulate(Policy, P, R, world_, verbose=False):
+def simulate(Policy, P, R, world_, verbose=False, max_steps=1000):
     def has_died(p):
         return R[p] == DEATH_REWARD
 
@@ -162,14 +165,13 @@ def simulate(Policy, P, R, world_, verbose=False):
         stay, *action_probs = get_tile_probabilities(a, coords, world_)
 
         if stay[1] > 0:
-            return pos, r + R[pos]
-
-        actual_a = np.random.choice(action_map, p=[x[1] for x in action_probs])
+            actual_a = np.random.choice(action_map)
+        else:
+            actual_a = np.random.choice(action_map, p=[x[1] for x in action_probs])
         next_pos = action_probs[actual_a][0]
         return next_pos, r + R[next_pos]
 
     reward = 0
-    max_steps = 1000
     step = 0
     position = 0
 
@@ -205,23 +207,75 @@ def simulate(Policy, P, R, world_, verbose=False):
     return reward, step, result
 
 
+def compute_theoretical_reward_and_utility(
+    model, P, R, W, max_steps=100, verbose=False
+):
+    def has_died(p):
+        return R[p] == DEATH_REWARD
+
+    def has_won(p):
+        return R[p] == WIN_REWARD
+
+    def apply_move(pos, r, u):
+        coords = position_to_coords(pos, W)
+        a = model.policy[pos]
+        next_pos = take_action(a, coords, W)
+        return next_pos, r + R[next_pos], u + model.V[next_pos]
+
+    utility = 0
+    reward = 0
+    step = 0
+    position = 0
+    while not has_died(position) and not has_won(position) and step < max_steps:
+        position, reward, utility = apply_move(position, reward, utility)
+        step += 1
+        if verbose:
+            print(
+                f"\tStep = {step}, Position = {position} - {position_to_coords(position, W)}, Reward = {reward}, Utility = {utility}"
+            )
+
+    return reward, utility
+
+
 def run():
-    P, R, world = create()
+    P, R, world = create(n=7)
 
     print("WORLD")
     print(world)
 
+    def hook(model, attr="V"):
+        data = getattr(model, attr)
+        return np.absolute(np.array(data)).sum() / 7
+
     vit = ValueIteration(P, R, 0.98, max_iter=1000000)
-    vit.run()
+    signal = vit.run(hook=hook)
     print("Value Iteration Policy")
     print(pretty_print_policy(vit.policy, readable_action_map, dim_size=len(world)))
-    reward, step, result = simulate(vit.policy, P, R, world, verbose=False)
+    reward, step, result = simulate(vit.policy, P, R, world, verbose=True)
     print("RESULT", reward, step, result)
 
+    reward, utility = compute_theoretical_reward_and_utility(
+        vit, P, R, world, verbose=True
+    )
+
+    print("THEORETICAL", reward, utility)
+
+    return
+
     pit = PolicyIteration(P, R, 0.98, max_iter=100000)
-    pit.run()
+    signal = pit.run(hook=hook)
     print("Policy Iteration Policy")
     print(pretty_print_policy(pit.policy, readable_action_map, dim_size=len(world)))
+    print(pit.V)
+
+    plot_lotr_policy(
+        np.array(pit.policy).reshape((7, 7)),
+        world,
+        "tmp.png",
+    )
+
+    print("CONFIDENCE:", np.absolute(np.array(pit.V)).sum() / 7)
+    print(signal)
 
     reward, step, result = simulate(pit.policy, P, R, world, verbose=False)
     print("RESULT", reward, step, result)
